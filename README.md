@@ -10,15 +10,26 @@ Built for the **SilverTree Pioneers technical assessment — Track A**.
 
 ## What it does
 
-A salesperson types a charity name or registration number into the search box. Within a few seconds, the tool returns:
+The tool runs in two modes:
+
+### 🔎 Single charity lookup
+A salesperson types a charity name or registration number. Within seconds, the tool returns:
 
 - 📊 Last 3 years of **income** and **expenditure** with percentage trend
 - 📈 Visual trend chart (income vs. expenditure)
 - 🔥 **HOT PROSPECT** flag if income grew >10% year-on-year
 - 👥 List of charity trustees
-- ⬇️ One-click **CSV export** for piping data into the sales pipeline
+- ⬇️ One-click **CSV export**
 
-This replaces what used to be a manual workflow: opening individual records on the Charity Commission register and eyeballing PDF accounts. The salesperson now spends 10 seconds per charity instead of 5–10 minutes.
+### 📋 Batch prospect screening
+A salesperson pastes a list of charity names or registration numbers (mixed freely, one per line). The tool resolves each one, pulls financials, calculates trends, and returns a single sortable table — with hot prospects ranked at the top.
+
+- Mix names and registration numbers freely
+- Automatic deduplication by registration number
+- Sorted by hot-prospect flag, then by income growth
+- One-click CSV export of the entire batch
+
+This replaces what used to be a manual workflow: opening individual records on the Charity Commission register and eyeballing PDF accounts. The salesperson now spends seconds per charity instead of 5–10 minutes.
 
 ---
 
@@ -27,45 +38,63 @@ This replaces what used to be a manual workflow: opening individual records on t
 | Charity | Reg # | Why it's interesting |
 |---|---|---|
 | `Oxfam` | `202918` | Large charity in decline (-15% income) |
-| `Cancer Research UK` | `1089464` | Steady but expenditure outpacing income |
+| `Cancer Research UK` | `1089464` | Steady income, expenditure outpacing it |
 | `4 Cancer Group` | `1090133` | 🔥 Hot prospect: +21.6% income growth |
 
 ---
 
-## Stack & decisions
+## Stack and decisions
 
 | Layer | Choice | Why |
 |---|---|---|
 | Backend | **Python** | Best ecosystem for AI/data work, fastest to ship |
-| UI | **Streamlit** | Zero-frontend overhead, instantly shareable, looks polished out of the box |
+| UI | **Streamlit** | Zero-frontend overhead, instantly shareable, polished out of the box |
 | Data | **UK Charity Commission Register API (v1.0)** | Official, free, real-time |
 | Hosting | **Streamlit Community Cloud** | Free, public URL, GitHub-integrated CI/CD |
 | Caching | `@st.cache_data` (1-hour TTL) | Reduces API calls, faster repeat lookups |
 | Secrets | Streamlit secrets + env vars | API key stays out of the repo |
 
-### Decisions I made & alternatives I considered
+### Decisions I made and alternatives I considered
 
-- **Streamlit over Flask/FastAPI:** I prioritised time-to-demo over flexibility. A FastAPI + React build would be more production-grade but would have taken 3-4× longer for the same demo value.
-- **Hosted over local:** the brief said "hosted is better." Streamlit Cloud was a 5-minute deploy from a GitHub push — no Docker, no server config.
-- **Sales-first language ("HOT PROSPECT", "outreach"):** every label is written for the user (mhance's sales team), not for an engineer. The tool isn't a data viewer; it's a prioritisation tool.
-- **Trend thresholds (5% flat, 10% hot):** these are placeholder business rules. In production, mhance's sales leadership would calibrate these based on conversion data.
-- **Hot prospect placement:** the flag sits **above** the chart, not below it — so the most actionable signal is the first thing a salesperson sees.
-- **Developer mode toggle:** raw API responses are hidden by default but accessible via a sidebar toggle. Good for debugging in production without confusing end users.
+- **Streamlit over Flask/FastAPI.** I prioritised time-to-demo over flexibility. A FastAPI + React build would be more production-grade but would have taken 3-4× longer for the same demo value.
+- **Streamlit Cloud over Replit.** Replit was my initial choice, but its UI has been redesigned around an AI Agent flow that made spinning up a blank Python environment surprisingly difficult. After 30 minutes of fighting it, I pivoted to local development + Streamlit Cloud deployment via GitHub. The deployment workflow turned out to be much more production-grade — and a more transferable skill.
+- **Hosted over local.** The brief said "hosted is better." Streamlit Cloud was a 5-minute deploy from a GitHub push — no Docker, no server config.
+- **Sales-first language ("HOT PROSPECT", "outreach").** Every label is written for the user (mhance's sales team), not for an engineer. The tool isn't a data viewer; it's a prioritisation tool.
+- **Trend thresholds (5% flat, 10% hot).** Placeholder business rules. In production, mhance's sales leadership would calibrate these based on conversion data from past deals.
+- **Hot prospect placement.** The flag sits **above** the chart, not below it, so the most actionable signal is the first thing a salesperson sees.
+- **Batch deduplication by reg number.** When testing batch mode, I noticed users would naturally paste both names and registration numbers — sometimes referencing the same charity twice. Rather than returning duplicate rows, the tool dedupes by resolved registration number. Small fix; the kind of edge case that determines whether a tool is actually used.
+- **Developer mode toggle.** Raw API responses are hidden by default but accessible via a sidebar toggle. Good for debugging in production without confusing end users.
 
 ---
 
-## What I'd do differently with a full week
+## Stretch goals from the brief
 
-I had ~5 hours focused build time. With a full week, I'd cut nothing from the current MVP — but I'd add:
+| Stretch goal | Status |
+|---|---|
+| Multi-charity at once | ✅ Done (batch screening tab) |
+| Hot prospect flag (>10% YoY) | ✅ Done |
+| CSV export | ✅ Done (single + batch) |
+| Cache API responses | ✅ Done (1-hour TTL) |
+| README with decisions | ✅ Done (this file + Reflections.md) |
+| Search by sector / geography / income band | ❌ Deliberately skipped — see [Reflections.md](Reflections.md) |
 
-1. **Multi-charity batch search** — paste a list of names/reg numbers, get a single ranked CSV. This is the actual sales workflow.
-2. **Sector filtering & "find me hot prospects in education"** — turn the tool from a lookup into a discovery engine.
-3. **Trustee enrichment** — cross-reference trustee names against LinkedIn/Companies House to surface decision-makers and warm-intro paths. This is where the real sales value is.
-4. **Outreach status & CRM integration** — sync flagged prospects directly into mhance's Dynamics 365 (poetic given they're a Dynamics partner).
-5. **Scheduled refresh + alerting** — re-run flagged charities monthly; ping a Slack channel when a watched charity files new accounts.
-6. **A real frontend** — Streamlit is great for prototypes; for production I'd rebuild the UI in React + a FastAPI backend, with proper auth and audit logging.
+Plus a non-listed addition: **batch deduplication by registration number** to handle real-world user behaviour.
 
-What I'd cut: nothing yet. The MVP is intentionally narrow.
+---
+
+## What I would do differently with a full week
+
+I had 3 days of focused build time. With a full week, I would not cut anything from the current MVP — but I would add:
+
+1. **Sector and geography discovery.** "Show me all charities in education with income £500k–£2m, growing >10%." Shifts the tool from "verify a known prospect" to "discover prospects I didn't know existed."
+2. **Trustee enrichment.** Cross-reference trustee names against Companies House and LinkedIn to surface decision-makers and warm-introduction paths. This is where most of the actual sales value lives.
+3. **CRM integration with Dynamics 365.** mhance is a Dynamics partner — flagged prospects should sync directly into Dynamics rather than being copy-pasted from a CSV.
+4. **Scheduled refresh + Slack alerts.** Re-check watched charities monthly; alert when fresh accounts are filed.
+5. **A real frontend.** Streamlit is great for prototypes; for production I would rebuild in React + a FastAPI backend, with proper auth and audit logging.
+
+What I would cut: Nothing yet. The MVP is intentionally narrow.
+
+A fuller version of this section, including the assessment-improvement suggestions, lives in [Reflections.md](Reflections.md).
 
 ---
 
@@ -73,23 +102,30 @@ What I'd cut: nothing yet. The MVP is intentionally narrow.
 
 The current build is a working prototype. To take it to production, the next priorities would be:
 
-- **Error handling for API rate limits** — the Charity Commission API rate-limits requests; I'd add exponential backoff and a Redis-based shared cache.
-- **Auth** — Streamlit Cloud's public URL has no access control. Production would need SSO (probably Microsoft Entra given mhance's Microsoft alignment).
-- **Monitoring** — basic logging exists; production needs Sentry for errors and a usage dashboard.
-- **Tests** — no automated tests yet. Priority test coverage: trend calculation logic, hot-prospect logic, API response parsing.
-- **Data freshness indicator** — the cache is 1-hour TTL but the user can't see when data was last fetched. A "last updated" stamp would build trust.
+- **Rate-limit handling.** Add exponential backoff and a Redis-based shared cache (so multiple salespeople don't all hit the API independently).
+- **Auth.** Streamlit Cloud's public URL has no access control. Production would need SSO — probably Microsoft Entra given mhance's Microsoft alignment.
+- **Monitoring.** Basic logging exists; production needs Sentry for errors and a usage dashboard.
+- **Automated tests.** No test coverage yet. Priority targets: trend calculation, hot-prospect logic, API response parsing.
+- **Data freshness indicator.** The cache is 1-hour TTL but the user can't see when data was last fetched. A "last updated" stamp would build trust.
 
 ---
 
-## One thing that didn't work, and how I worked it out
+## What did not work, and how I worked it out
 
-**The Charity Commission API endpoints I initially used returned 404 errors for every search.**
+Three things hit walls during the build.
 
-The assessment brief said the API needed no key, but the real API requires a free key from the developer portal. Once I had the key, my searches still 404'd because I'd guessed the endpoint paths from a stale npm package's docs.
+### 1. Replit
+Replit was my initial choice. Its UI has been redesigned around an AI Agent flow that funnels every "new project" attempt through a "describe what you want" prompt. After repeated attempts to get a plain Python environment, I pivoted to **local development in VS Code + deployment to Streamlit Cloud via GitHub**. The deploy turned out to be more production-grade (public URL, auto-redeploy on commit, secrets management) and a more transferable workflow. Lesson: Do not sunk-cost a tool when the friction is structural, not technical.
 
-**How I worked it out:** I traced the official PDF documentation linked from the developer portal (`API_GET_operations_v1.1.pdf`), which has the actual endpoint routes (`searchCharityName/{name}`, `charityfinancialhistory/{regNum}/{suffix}`, etc.). I added a "Developer mode" toggle that surfaces the raw API response inline — that let me see the real field names (`financial_period_end_date`, `income`, `expenditure`) which differed from what I'd guessed (`fin_period_end_date`, `total_gross_income`, etc.). I corrected the field names and the data flowed through.
+### 2. The Charity Commission API
+The brief said no key was needed. That is outdated — the API now requires a free key from a developer portal. Even after I got the key, my first endpoint calls all returned 404s because I had guessed the routes from an old npm package's docs.
 
-**Lesson:** Don't trust LLM-generated assumptions about a real API. Build a debug surface into the tool itself — it pays for itself in five minutes.
+I worked through it by reading the official PDF documentation linked from the developer portal, which has the real routes (`searchCharityName/{name}`, `charityfinancialhistory/{regNum}/{suffix}`). Then the financial table came back as all zeros — so I built a developer-mode toggle into the app to surface raw API responses inline. That immediately showed the real field names (`income`, `expenditure`) versus what I had assumed (`total_gross_income`, etc.).
+
+Lesson: when integrating with an unknown API, build the debug surface into the tool itself. It pays for itself in five minutes.
+
+### 3. Duplicate rows in batch mode
+First version of batch screening returned duplicate rows when users pasted both a charity name and its registration number. Technically correct, practically annoying for anyone exporting to a CRM. Added a deduplication step that tracks resolved registration numbers across the run.
 
 ---
 
@@ -115,12 +151,14 @@ streamlit run app.py
 
 ---
 
-## Three ways I'd improve this assessment for future hires
-
-1. **State that the Charity Commission API requires a free key.** The brief says "no key needed" — this is no longer true and cost me ~30 minutes of confused debugging. Either say "free signup at this URL" or pre-issue keys.
-2. **Provide one or two known-good test charities upfront.** Knowing that `202918` is Oxfam (with rich data) is the difference between a 5-minute API smoke test and a 30-minute one. Mentioning a couple of reg numbers in the brief saves candidates real time.
-3. **Be explicit about whether stretch goals are graded.** I prioritised core correctness then stretch goals — but the brief is ambiguous. Clarifying "everything beyond core is for time-permitting bonus, no penalty for skipping" would let candidates allocate their time more confidently and reduce stress for less-experienced builders.
+## Repo Structure
+charity-intelligence-tool/
+├── app.py                    # Main Streamlit application
+├── requirements.txt          # Python dependencies
+├── README.md                 # This file
+├── REFLECTIONS.md            # Pre/post-build reflections per the brief
+├── .gitignore                # Excludes secrets, caches, etc.
+└── .streamlit/
+└── secrets.toml          # Local API key (gitignored)
 
 ---
-
-**Built by Lynn Komen, May 2026**
