@@ -400,5 +400,5 @@ st.divider()
 st.caption(
     "Data source: UK Charity Commission Register · "
     "Built for the SilverTree Pioneers technical assessment · "
-    "Lynn Komen, May 2026"
+    "Lynn Komen"
 )
