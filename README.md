@@ -150,15 +150,3 @@ streamlit run app.py
 ```
 
 ---
-
-## Repo Structure
-charity-intelligence-tool/
-├── app.py                    # Main Streamlit application
-├── requirements.txt          # Python dependencies
-├── README.md                 # This file
-├── REFLECTIONS.md            # Pre/post-build reflections per the brief
-├── .gitignore                # Excludes secrets, caches, etc.
-└── .streamlit/
-└── secrets.toml          # Local API key (gitignored)
-
----
